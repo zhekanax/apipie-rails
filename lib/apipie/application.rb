@@ -29,26 +29,8 @@ module Apipie
       @controller_to_resource_id[controller] = resource_id
     end
 
-    def rails_routes(route_set = nil)
-      if route_set.nil? && @rails_routes
-        return @rails_routes
-      end
-      route_set ||= Rails.application.routes
-      # ensure routes are loaded
-      Rails.application.reload_routes! unless Rails.application.routes.routes.any?
-
-      flatten_routes = []
-
-      route_set.routes.each do |route|
-        if route.app.respond_to?(:routes) && route.app.routes.is_a?(ActionDispatch::Routing::RouteSet)
-          # recursively go though the moutned engines
-          flatten_routes.concat(rails_routes(route.app.routes))
-        else
-          flatten_routes << route
-        end
-      end
-
-      @rails_routes = flatten_routes
+    def rails_routes
+      @rails_routes ||= Rails.application.reload_routes!.map { |route_set| route_set.routes.to_a }.flatten
     end
 
     # the app might be nested when using contraints, namespaces etc.
